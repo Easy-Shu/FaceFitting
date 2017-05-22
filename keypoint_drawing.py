@@ -2,8 +2,8 @@ import numpy as np
 import cv2
 from matplotlib import pyplot as plt
 
-keypoint_file = 'image_0010.pts'
-image_file = 'image_0010.png'
+keypoint_file = 'target.pts'
+image_file = 'target.png'
 points = 68
 data = []
 
@@ -34,8 +34,8 @@ font = cv2.FONT_HERSHEY_SIMPLEX
 for idx, point in enumerate(data):
 	x, y = point
 	coord = (int(x), int(y))
-	cv2.circle(img, (int(x),int(y)), 1,(0,0,255), 1)
-	cv2.putText(img, str(idx), coord, font, 0.3, (0,0,255))
+	cv2.circle(img, coord, 1,(0,0,255), 1)
+	cv2.putText(img, str(idx+1), coord, font, 0.3, (0,0,255))
 	cv2.imshow('imagem...', img)
 	cv2.waitKey(0)
 
