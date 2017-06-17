@@ -17,7 +17,7 @@ color_unmarked = (0,0,255)
 color_marked = (200,0,200)
 
 # Estimated monitor height 
-monitor_height = 1500
+monitor_height = 1400
 scale = 1
 
 # Window fuctions
@@ -34,6 +34,10 @@ def mouse_event(event, x, y, flags, param):
 		unscale = 1/scale
 		point = (round(x*unscale), round(y*unscale))
 		print(point)
+		
+		#R, G, B = currImage[y, x, :]
+		#bright = 0.5 * max(R, G, B) + 0.5*min(R, G, B)
+		#print('brightness: %f' % bright)
 		
 		currImage = previousImage
 		previousImage = currImage.copy()

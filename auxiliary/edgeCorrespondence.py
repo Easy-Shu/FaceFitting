@@ -65,6 +65,7 @@ def contourCorrespondences(currentMesh, R, t, s, imageContourPoints, occludingVe
 		# Save it to result
 		points.append(im_point)
 		vertex_indices.append(vertex_index_nearest)
+		
 	
 	return vertex_indices, points
 	
@@ -73,6 +74,9 @@ def silhouetteVertices(currentMesh, meshFaces, R, visibleOnly = True):
 	# face normals with Z values bellow minZ will be considered silhouette
 	maxZ = 0.13
 	silhouettes = []
+	# this value is for basel face model and will vary from model to model. 
+	# It is the depth of the face at a point near the neck. We consider that silhouettes won't have a depth value lower than this, so we avoid many visible points that aren't silhouettes. 
+	threshold = 46000.0
 	
 	# reshape to [n x 3], so each vertex is in each row
 	V = np.copy(currentMesh.reshape(-1,3))
@@ -99,6 +103,9 @@ def silhouetteVertices(currentMesh, meshFaces, R, visibleOnly = True):
 			v1 -= 1
 			v2 -= 1
 			v3 -= 1
+			
+			if V[v1, 2] < threshold or V[v2, 2] < threshold or V[v3, 2] < threshold:
+				continue
 			
 			silhouettes.extend([v1, v2, v3])
 			
@@ -195,9 +202,10 @@ def occludingBoundaryVertices(currentMesh, meshFaces, Ef, Ev, R):
 	return visibleVertices
 	
 # Return set of indidices of visible vertices of model, given rotation
+# returnNormals: I added this term to return the normals of the rotated face. This makes computations faster in some places that normals are required so we don't calculate twice.
 # Obs: this is an approximation, it assumes visible vertices have Z component of face normal positive.
-# Works well for convex-like surfaces.
-def visibleVertices(mesh, F, R):
+# Works well for convex-like surfaces and those that don't have occluding surfaces very close to each other. 
+def visibleVertices(mesh, F, R, returnNormals = False):
 	minZ = 0.2
 	V = np.copy(mesh.reshape((-1,3)))
 	visible_vertices = []
@@ -319,9 +327,14 @@ def visibleVertices(mesh, F, R):
 		if depth >= (rasterMap[int(x), int(y)] - tolerance):
 			result.append(v_index)
 				
-				
-	return set(result)
+	if returnNormals:
+		return set(result), fn
+		
+	else :
+		return set(result)
 	
+# Deprecated, it doesn't really work well, I dont really know why and is too computationally consuming
+# Use visibleVertices() instead.
 # Removes the invisible vertices from list 
 def removeInvisibleVertices(V, F, contourVertices, R):
 	# Here we will remove the invisible vertices. 
@@ -491,7 +504,7 @@ def barycentricCoords(px, py, triangle):
 	
 	return v, w, u
 
-# Returns an array with size [num_faces x 3], containing the normal vector of each face in the mesh
+# Returns an array with size [num_triangles, 3], containing the normal vector of each triangle face in the mesh
 def faceNormals(meshVertices, meshFaces):
 	V = meshVertices.reshape(-1,3)
 	F = meshFaces.reshape(-1,3)
@@ -527,6 +540,7 @@ def faceNormals(meshVertices, meshFaces):
 		
 		normals[i, :] = fn
 			
+	
 	return normals
 	
 # Returns the Yaw angle from rotation matrix in degrees

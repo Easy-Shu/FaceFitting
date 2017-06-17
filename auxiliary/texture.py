@@ -16,7 +16,7 @@ def readTexture(file_name):
 	
 # Extracts texture from image given the pose and the model
 # obs: assumes FV and FT ate in 1-starting indexing
-def extractTextureSinglePose(base_texture, pose, estimated_shape, tex_points, FV, FT):
+def extractTextureSinglePose(estimated_shape, base_texture, pose, tex_points, FV, FT):
 	V = estimated_shape.reshape((-1,3))
 
 	tex_dst = np.copy(base_texture)
@@ -29,13 +29,14 @@ def extractTextureSinglePose(base_texture, pose, estimated_shape, tex_points, FV
 	t = pose.t
 	s = pose.s
 	
-	mask = np.zeros((texture_height, texture_width))
+	texture_mask = np.zeros((texture_height, texture_width))
 	
 	num_faces = FV.shape[0]
 	num_vertices = V.shape[0]
 	
 	# Calculate visible only vertices (takes a while because we're basically rendering the whole mesh using CPU)
-	visible_vertex_i = edges.visibleVertices(V, FV, R)
+	# We'll use the face normals lates. 
+	visible_vertex_i, fn = edges.visibleVertices(V, FV, R, returnNormals = True)
 		
 	for i in range(num_faces):
 	
@@ -104,9 +105,9 @@ def extractTextureSinglePose(base_texture, pose, estimated_shape, tex_points, FV
 		# Crop scr image and triangles
 		tri1Cropped = []
 		tri2Cropped = []
-		for i in range(3):
-			tri1Cropped.append( (tri1[i][0] - r1[0],  tri1[i][1] - r1[1]) )
-			tri2Cropped.append( (tri2[i][0] - r2[0],  tri2[i][1] - r2[1]) )
+		for j in range(3):
+			tri1Cropped.append( (tri1[j][0] - r1[0],  tri1[j][1] - r1[1]) )
+			tri2Cropped.append( (tri2[j][0] - r2[0],  tri2[j][1] - r2[1]) )
 
 		# swapping x and y positions
 		img1Cropped = pose_image[r1[1]:r1[1]+r1[3], r1[0]: r1[0] + r1[2] ]
@@ -130,8 +131,18 @@ def extractTextureSinglePose(base_texture, pose, estimated_shape, tex_points, FV
 		# Copy triangular region of the rectangular patch to the output image
 		tex_dst[r2[1]:r2[1]+r2[3], r2[0]:r2[0]+r2[2]] = tex_dst[r2[1]:r2[1]+r2[3], r2[0]:r2[0]+r2[2]] * ( (1.0, 1.0, 1.0) - mask )
 		tex_dst[r2[1]:r2[1]+r2[3], r2[0]:r2[0]+r2[2]] = tex_dst[r2[1]:r2[1]+r2[3], r2[0]:r2[0]+r2[2]] + img2Cropped
-
-	return tex_dst
+		
+		# Now we will compute the texture_mask. 
+		# It holds values between 0 and 1 describing how much we want certain portions of the extracted texture to describe the final texture. 0 means no texture was extracted to that place so we disconsider it. 1 means it is supposedly a 'very good' texture so will contribute more.
+		
+		# Here we assume that faces whose normal-Z component have larger values describe better the texture. That is because those traingles are facing directly towards the viewer. 
+		
+		texture_mask[r2[1]:r2[1]+r2[3], r2[0]:r2[0]+r2[2]] = texture_mask[r2[1]:r2[1]+r2[3], r2[0]:r2[0]+r2[2]] * ( (1.0) - mask[:,:,0] )
+		
+		texture_mask[r2[1]:r2[1]+r2[3], r2[0]:r2[0]+r2[2]] = texture_mask[r2[1]:r2[1]+r2[3], r2[0]:r2[0]+r2[2]] + mask[:,:,0] * fn[i, 2]  
+		
+				
+	return tex_dst, texture_mask
 
 
 

@@ -7,8 +7,10 @@ import auxiliary.loader as loader
 import auxiliary.orthogonalCamera as camera
 import auxiliary.util as util
 import auxiliary.draw as draw
+import auxiliary.texture as texture
 
 import numpy as np
+import cv2
 from scipy.optimize import lsq_linear
 
 class Core():
@@ -139,6 +141,86 @@ class Core():
 		cost = res['cost']
 		
 		return x, cost
+	
+	# Extracts all the textures from the shapes and compose a single texture	
+	# Assumes the texture is square and colored
+	@staticmethod
+	def composeTexture(estimated_shape, base_texture, poses, uv_coords, FV, FT):
+		brightnessRemoval = 0.7
+		textures = []
+		masks = []
+		
+		texture_size = base_texture.shape[0]
+		
+		for p in poses :
+			# todo: rough color correction along poses. Regions around landmarks should have similar overall color
+		
+			extracted_texture, texture_mask = texture.extractTextureSinglePose( estimated_shape, base_texture, p, uv_coords, FV, FT) 
+				
+			
+			textures.append(extracted_texture)
+			masks.append(texture_mask)
+			
+		# Normalize masks. mask_i = mask_i / sum_masks
+		# adding small amount avoids divisons by zero
+		sum_masks = sum(masks) + 0.001
+		for i in range(len(masks)):
+			masks[i] = masks[i]/ sum_masks
+			
+		# Calculate mean texture taking into consideretion the normalized masks.
+		# mean_text =  mask_1 * text_1 +...+ mask_i * text_i 
+		mean_texture = np.zeros(textures[0].shape)
+		
+		for i in range(len(textures)):
+			mask = masks[i]
+			
+			# Repeat mask to give 3 channels
+			# mask = np.repeat(mask[:,:, np.newaxis], 3, axis=2) # less complicated method below
+			mask = np.dstack([mask,mask,mask])
+			mean_texture += mask * textures[i]
+					 
+		
+		# We want to reduce shadows and specular highlights. To do this we'll iterate through every texture pixel and compute its brightness and compare to the brightness of the average texture at that pixel. The difference D = |(current texture brightness) - (average texture brightness)| will be in the range [0, 254]. 
+		# D/254 will normalize it to [0,1], being 1 total difference. Given that the mask value of that texture at that pixel is W, we'll have: 
+		# new W = (W -W*D*brightnessRemoval) = W*(1 - D*brightnessRemoval)
+		# brightnessRemoval might be greater than 1, so the new W might become negative. In this case we set its value to 0
+		# We'll skip the pixel if W is already 0. 
+		
+		for y in range(texture_size):
+			for x in range(texture_size):
+				R, G, B = mean_texture[y, x, :]
+				avg_brightness = 0.5 * max(R, G, B) + 0.5*min(R, G, B)
+				
+				for i in range(len(textures)):
+					W = masks[i][y,x]
+					if W == 0:
+						continue
+					
+					R, G, B = textures[i][y, x, :]
+					tex_brightness = 0.5 * max(R, G, B) + 0.5*min(R, G, B)
+					D = abs(avg_brightness- tex_brightness)/254
+					newW = W*(1-D*brightnessRemoval)
+					masks[i][y,x] = max(0, newW)
+					
+		# Increase filter contrast by using power of 2. This avoids too much texture overlapping. Maybe even use power of 3.
+		for i in range(len(masks)):
+			masks[i] = masks[i] * masks[i]
+		
+		# Normalize masks again
+		sum_masks = sum(masks) + 0.001
+		for i in range(len(masks)):
+			masks[i] = masks[i]/ sum_masks
+			
+		# Compose final texture:
+		final_texture = np.zeros(textures[0].shape)
+		for i in range(len(textures)):
+			mask = masks[i]
+			text = textures[i]
+			weighted_text = np.dstack([mask,mask,mask]) * text
+			final_texture += weighted_text
+			
+		return final_texture
+		
 	
 	# Returns the shape vertices given the PCA parameters x
 	@staticmethod

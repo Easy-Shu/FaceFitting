@@ -101,6 +101,9 @@ class Pose():
 			silhouettes = edges.silhouetteVertices(Pose.currentMesh, faceModel.tl, self.R, Pose.visibleOnly)
 			self.silhouettes = silhouettes
 		
+			print(silhouettes)
+			input()
+		
 		# We'll treat them just like contours
 		self.contour_vertices, self.contour_points = edges.contourCorrespondences(Pose.currentMesh, self.R, self.t, self.s, self.occluding_points, self.silhouettes, min_dist = self.min_contour_dist)
 		
@@ -109,7 +112,7 @@ class Pose():
 	
 		# CONTOUR ESTIMATION
 		#	1. Calculate occluding vertices
-		occluding_vertices_i = edges.occludingBoundaryVertices(Pose.currentMesh, faceModel.tl, faceModel.Ef, faceModel.Ev, self.R)		
+		occluding_vertices_i = edges.occludingBoundaryVertices(Pose.currentMesh, faceModel.tl, faceModel.Ef, faceModel.Ev, self.R)
 		
 		#	2. Find contour matches given the occluding vertices calculated above
 		self.contour_vertices, self.contour_points = edges.contourCorrespondences(Pose.currentMesh, self.R, self.t, self.s, self.occluding_points, occluding_vertices_i, min_dist = self.min_contour_dist)
