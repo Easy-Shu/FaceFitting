@@ -1,6 +1,6 @@
 # Face Fitting
 
-Little project in python based on project from Patrick Hubber (https://github.com/patrikhuber/eos). Idea is to fit a morphable model shape (the basel face model) to face image, given keypoints in the image and their correspondences in the model.
+Little project in python based on project from Patrick Hubber (https://github.com/patrikhuber/eos). Idea is to fit a morphable model shape (the basel face model) to face image, given keypoints in the image and their correspondences in the model. Then we extract texture directly from images and merge them together. I am currently trying to find a way to make the merge as seamless as possible. 
 
 ## Contents 
 
