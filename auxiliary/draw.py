@@ -29,7 +29,7 @@ def drawKeypoints(image, points2D, yFlip=True, color = (0,0,255), size = 1.0):
 			y = height-y
 		
 		coord = (int(x), int(y))
-		cv2.circle(img, coord, int(1/size), color, int(1/size))
+		cv2.circle(img, coord, int(1/size), color, int(2/size))
 		
 	# Resize image if set to
 	if size != 1.0:

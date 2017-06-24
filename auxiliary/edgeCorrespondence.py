@@ -543,11 +543,6 @@ def faceNormals(meshVertices, meshFaces):
 	
 	return normals
 	
-# Returns the Yaw angle from rotation matrix in degrees
-def yawAngle(R):
-	angles, jac = cv2.Rodrigues(R)
-	yaw = np.rad2deg(angles)[1,0]
-	return yaw
 	
 		
 		

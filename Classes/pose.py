@@ -101,8 +101,8 @@ class Pose():
 			silhouettes = edges.silhouetteVertices(Pose.currentMesh, faceModel.tl, self.R, Pose.visibleOnly)
 			self.silhouettes = silhouettes
 		
-			print(silhouettes)
-			input()
+			#print(silhouettes)
+			#input()
 		
 		# We'll treat them just like contours
 		self.contour_vertices, self.contour_points = edges.contourCorrespondences(Pose.currentMesh, self.R, self.t, self.s, self.occluding_points, self.silhouettes, min_dist = self.min_contour_dist)

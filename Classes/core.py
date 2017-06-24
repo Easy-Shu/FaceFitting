@@ -146,6 +146,12 @@ class Core():
 	# Assumes the texture is square and colored
 	@staticmethod
 	def composeTexture(estimated_shape, base_texture, poses, uv_coords, FV, FT):
+		# read eye mask:
+		eye_mask_path = 'share/eye_map.png'
+		img =cv2.imread(eye_mask_path, cv2.IMREAD_GRAYSCALE)
+		W = base_texture.shape[0]
+		eye_mask = cv2.resize(img, (W,W)).astype(np.float32)/210.0
+		
 		brightnessRemoval = 0.7
 		textures = []
 		masks = []
@@ -202,9 +208,20 @@ class Core():
 					newW = W*(1-D*brightnessRemoval)
 					masks[i][y,x] = max(0, newW)
 					
+		# Find texture with smallest yaw angle
+		yaw = 999999.0
+		smaller_yaw_index = 0
 		# Increase filter contrast by using power of 2. This avoids too much texture overlapping. Maybe even use power of 3.
 		for i in range(len(masks)):
-			masks[i] = masks[i] * masks[i]
+			#masks[i] = masks[i] * masks[i]
+			R = poses[i].R
+			pose_yaw = abs(camera.yawAngle(R))
+			if pose_yaw < yaw:
+				yaw = pose_yaw
+				smaller_yaw_index = i
+				
+		# Add eye mask
+		masks[smaller_yaw_index] = masks[smaller_yaw_index] +  eye_mask
 		
 		# Normalize masks again
 		sum_masks = sum(masks) + 0.001

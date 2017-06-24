@@ -17,7 +17,7 @@ color_unmarked = (0,0,255)
 color_marked = (200,0,200)
 
 # Estimated monitor height 
-monitor_height = 1400
+monitor_height = 1300
 scale = 1
 
 # Window fuctions
@@ -41,7 +41,7 @@ def mouse_event(event, x, y, flags, param):
 		
 		currImage = previousImage
 		previousImage = currImage.copy()
-		currImage = cv2.circle(currImage, (x, y), 2, color_unmarked, -1)
+		currImage = cv2.circle(currImage, (x, y), 1, color_unmarked, -1)
 
 pts_extension = '.pts'
 
@@ -99,8 +99,8 @@ for i in range(len(images)):
 				x, y = point
 				x = round(x * scale)
 				y = round(y * scale)
-				currImage = cv2.circle(currImage, (x, y), 3, color_marked, -1)
-				cv2.putText(currImage, str(currIndex), (x, y), font, 0.5, (0,0,0))
+				currImage = cv2.circle(currImage, (x, y), 2, color_marked, -1)
+				#cv2.putText(currImage, str(currIndex), (x, y), font, 0.5, (0,0,0))
 				previousImage = currImage
 				clicked = False
 				indices.append(currIndex)

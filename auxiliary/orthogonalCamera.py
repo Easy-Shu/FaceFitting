@@ -1,5 +1,6 @@
 import auxiliary.util as util
 import numpy as np
+import cv2
 
 # Estimate scaled orthographic projection parameters from 2D-3D correspondences
 # Based on 3DMM Edges Master POS function
@@ -79,7 +80,11 @@ def SOP(vertex, R, t, s):
 	return Result
 	
 	
-	
+# Returns the Yaw angle from rotation matrix in degrees
+def yawAngle(R):
+	angles, jac = cv2.Rodrigues(R)
+	yaw = np.rad2deg(angles)[1,0]
+	return yaw
 	
 	
 	

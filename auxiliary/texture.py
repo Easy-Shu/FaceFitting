@@ -111,6 +111,11 @@ def extractTextureSinglePose(estimated_shape, base_texture, pose, tex_points, FV
 
 		# swapping x and y positions
 		img1Cropped = pose_image[r1[1]:r1[1]+r1[3], r1[0]: r1[0] + r1[2] ]
+		if r1[3] == 0 or r1[2] == 0 or r1[1] < 0 or r1[0] < 0 :	
+			continue
+			
+		if img1Cropped.shape[0] <= 0 or img1Cropped.shape[1] <= 0:
+			continue
 		
 		# Find the affine transform.
 		warpMat = cv2.getAffineTransform( np.float32(tri1Cropped), np.float32(tri2Cropped) )

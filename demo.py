@@ -8,6 +8,7 @@ import auxiliary.loader as loader
 import auxiliary.draw as draw
 import auxiliary.texture as texture
 import auxiliary.objHandler as obj
+import auxiliary.orthogonalCamera as camera
 import glob
 
 import numpy as np
@@ -40,15 +41,19 @@ mtl_dest = out_folder +'/'+ file_name + '.mtl'
 #	fixed_landmark_indices	:	Indices of landmarks in the face, excluding occluding landmarks. The correspond to those inside 'target.pts'
 #	flipY					: 	Set to true if landmarks in image are set with y-down axis convention
 
-target_folder = 'target4'
+target_folder = 'target5'
 image_type = 'jpg'
 fitting_iterations = 6
-SD_constraint = 2.7
+SD_constraint = 2.5
 num_components = 70
-contour_tolerance = 0.1
+contour_tolerance = 0.06
 visible_only_matching = True
 fixed_landmark_indices = list(range(1 , 90+1))
 flipY = True
+
+# OBJ files
+obj_scr = 'share/mean_face.obj'
+base_texture_scr = 'share/texture4K.png'
 
 #	INITIALIZING 
 print('Initializing.')
@@ -59,10 +64,6 @@ img_path = target_folder + '/*.' + image_type
 BFM_points_path = 'share/BFM.pts'
 bfm_path = 'share/01_MorphableModel.mat'
 bfm_edgestructure_path = 'share/BFMedgestruct.mat'
-
-# OBJ files
-obj_scr = 'share/mean_face.obj'
-base_texture_scr = 'share/smallTex.png'
 
 #	READ DATA (images, landmarks, face model ...)
 print('Reading data.')
@@ -91,23 +92,22 @@ for i in range(len(pts_files)):
 	
 	points = p.getLandmarkPoints()
 	
-	img = draw.drawKeypoints(p.image, points, size=0.3)
+	img = draw.drawKeypoints(p.image, points, size=0.2)
 	
 	print('Pose %d:\n%s\n' % (i+1, pts_files[i]))
 	print('Close image frame to continue.')
-	
 	cv2.imshow('imagem', img)
 	cv2.waitKey(0)
 	
 	poses.append(p)
 
-	
+#input('Continue?')
 	#	FITTING SHAPE
 newMesh = Core.fitIterated_linear(fitting_iterations, bfm, poses, num_components, SD_constraint)
 
-# Showing result of first pose
-#v, p = poses[0].getPointVertexCorrespondences()
-#img = draw.drawVertices(poses[0].image, v, newMesh, poses[0].R, poses[0].t, poses[0].s, size= 0.3)
+#Showing result of first pose
+v, p = poses[0].getPointVertexCorrespondences()
+img = draw.drawVertices(poses[0].image, v, newMesh, poses[0].R, poses[0].t, poses[0].s, size= 0.3)
 #cv2.imshow('imagem', img)
 #cv2.waitKey(0)
 
@@ -116,6 +116,8 @@ newMesh = Core.fitIterated_linear(fitting_iterations, bfm, poses, num_components
 	
 # Loading obj template for UV coords
 vertices, normals, uv_coords, FV, FN, FT, header, materialHeader = obj.readOBJ(obj_scr)
+
+#input('Extract texture?')
 
 # Texture extraction
 print('Extracting texture')
