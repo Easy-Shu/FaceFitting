@@ -41,7 +41,7 @@ mtl_dest = out_folder +'/'+ file_name + '.mtl'
 #	fixed_landmark_indices	:	Indices of landmarks in the face, excluding occluding landmarks. The correspond to those inside 'target.pts'
 #	flipY					: 	Set to true if landmarks in image are set with y-down axis convention
 
-target_folder = 'target5'
+target_folder = 'target4'
 image_type = 'jpg'
 fitting_iterations = 6
 SD_constraint = 2.5
